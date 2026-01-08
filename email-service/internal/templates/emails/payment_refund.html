@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Payment Refunded</title>
+</head>
+<body style="background:#f5f5f5; padding:20px;">
+    <div style="max-width:600px; margin:0 auto; background:#ffffff; padding:30px; border-radius:8px;">
+
+        <h2 style="color:#1565c0;">Payment Refunded</h2>
+
+        <p style="font-size:16px; color:#555;">
+            Hi <strong>{{ .Username }}</strong>,
+        </p>
+
+        <p style="font-size:16px; color:#555;">
+            Your payment has been successfully refunded.
+        </p>
+
+        <p style="font-size:16px; color:#555;">
+            <strong>Refund Amount:</strong> {{ .Amount }}<br/>
+            <strong>Reference ID:</strong> {{ .RefundID }}
+        </p>
+
+        <p style="font-size:16px; color:#555;">
+            The amount should reflect in your account within 5–7 business days.
+        </p>
+
+        <p style="margin-top:30px; font-size:14px; color:#999;">
+            If you have any questions, please contact support.
+        </p>
+
+    </div>
+</body>
+</html>

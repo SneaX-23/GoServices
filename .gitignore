@@ -1,0 +1,70 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.out/
+.tmp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+log-*.txt
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.eslintcache
+.turbo/
+.vite/
+
+# OS/System files
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/
+.idea/
+
+# Docker
+docker-data/
+docker-compose.override.yml
+
+# Redis / Postgres data (if mounted locally)
+redis-data/
+postgres-data/
+
+# Local-only files
+tmp/
+uploads/
+
+certs/
+nginx/certs/
+*.crt
+*.key
+*.pem
+
+ideas.txt
+hmm.txt
+
+frontend/
