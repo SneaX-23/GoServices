@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/templates"
+	"github.com/SneaX-23/GoServices/email-service/internal/templates"
 )
 
 type ServiceConfig struct {

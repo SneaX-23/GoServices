@@ -1,4 +1,4 @@
-module github.com/SneaX-23/Microservices-project/microservices-project/email-service
+module github.com/SneaX-23/GoServices/email-service
 
 go 1.25.5
 

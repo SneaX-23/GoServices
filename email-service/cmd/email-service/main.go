@@ -6,11 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/config"
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/consumers"
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/services"
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/templates"
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/utils"
+	"github.com/SneaX-23/GoServices/email-service/internal/config"
+	"github.com/SneaX-23/GoServices/email-service/internal/consumers"
+	"github.com/SneaX-23/GoServices/email-service/internal/services"
+	"github.com/SneaX-23/GoServices/email-service/internal/templates"
+	"github.com/SneaX-23/GoServices/email-service/internal/utils"
 )
 
 func main() {

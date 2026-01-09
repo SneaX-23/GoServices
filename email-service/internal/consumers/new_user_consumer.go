@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/config"
-	"github.com/SneaX-23/Microservices-project/microservices-project/email-service/internal/services"
+	"github.com/SneaX-23/GoServices/email-service/internal/config"
+	"github.com/SneaX-23/GoServices/email-service/internal/services"
 	"github.com/segmentio/kafka-go"
 )
 
