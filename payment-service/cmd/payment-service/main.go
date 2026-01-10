@@ -4,7 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/SneaX-23/GoServices/payment-service/internal/consumers"
 	"github.com/SneaX-23/GoServices/payment-service/internal/handlers"
 	"github.com/SneaX-23/GoServices/payment-service/internal/utils"
 )
@@ -26,4 +29,14 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("server error", "err", err)
 	}
+
+	// start refund consumer
+	go consumers.RefundConsumer()
+
+	// graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+
+	slog.Info("Shutting down...")
 }
