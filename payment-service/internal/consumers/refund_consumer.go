@@ -47,16 +47,22 @@ func RefundConsumer() {
 				return
 			}
 
-			messafetype := envelope.Type
-			slog.Info("Received message", "type", messafetype)
+			messagetype := envelope.Type
+			slog.Info("Received message", "type", messagetype)
 
-			// missing redis to store idempotency key to prevent duplicate refunds
 			// missing persistant database storage for single source of truth
 			// may need to update payment-events kafka topic to only
 			// send email after successful refund
 
-			slog.Info("Refund succesfull for reservation id", "reservationId", envelope.Data.ReservationId)
-			slog.Info("For the amoutn", "amount", envelope.Data.Amount)
+			if messagetype == "REFUND_INITIATED" {
+				// redis client
+				rdb := config.NewRedisClient()
+				defer rdb.Close()
+
+				slog.Info("Refund succesfull for reservation id", "reservationId", envelope.Data.ReservationId)
+				slog.Info("For the amoutn", "amount", envelope.Data.Amount)
+			}
+
 		}(m)
 	}
 }
