@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/database"
-	//"github.com/SneaX-23/GoServices/auth-service/internal/repository"
+	"github.com/SneaX-23/GoServices/auth-service/internal/handlers"
+	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 )
 
 func main() {
@@ -35,15 +37,26 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
+	// ping db to check connection
 	var now time.Time
 	err = db.Pool.QueryRow(ctx, "SELECT NOW()").Scan(&now)
 	if err != nil {
 		logger.Error("failed to execute test query", "error", err)
 		os.Exit(1)
 	}
+	logger.Info("application started successfully", "db_time", now)
 
 	// Initializze repository
-	// userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
-	logger.Info("application started successfully", "db_time", now)
+	userhandler := handlers.NewUserHandler(userRepo)
+
+	// Setup routes
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /verify-email", userhandler.VerifyEmail)
+
+	// Listen on port :8080
+	slog.Info("Server starting on :8080")
+	http.ListenAndServe(":8080", mux)
 }
