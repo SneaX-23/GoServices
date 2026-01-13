@@ -6,8 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/SneaX-23/auth-service/internal/config"
-	"github.com/jackc/pgx/v5"
+	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 )

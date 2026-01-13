@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/SneaX-23/GoServices/internal/config"
-	"github.com/SneaX-23/GoServices/internal/database"
+	"github.com/SneaX-23/GoServices/auth-service/internal/config"
+	"github.com/SneaX-23/GoServices/auth-service/internal/database"
 )
 
 func main() {
