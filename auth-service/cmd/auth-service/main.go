@@ -8,6 +8,7 @@ import (
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/database"
+	//"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 )
 
 func main() {
@@ -40,6 +41,9 @@ func main() {
 		logger.Error("failed to execute test query", "error", err)
 		os.Exit(1)
 	}
+
+	// Initializze repository
+	// userRepo := repository.NewUserRepository(db)
 
 	logger.Info("application started successfully", "db_time", now)
 }

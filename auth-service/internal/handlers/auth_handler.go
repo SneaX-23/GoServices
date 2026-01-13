@@ -26,6 +26,10 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content/type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"success": "true",
+		"message": "Otp has been sent to your email",
+	})
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
