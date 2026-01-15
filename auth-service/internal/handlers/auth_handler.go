@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
+	"github.com/SneaX-23/GoServices/auth-service/internal/utils"
 )
 
 type UserHandler struct {
@@ -60,10 +62,22 @@ func (h *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "Otp has been sent to your email",
 	})
+	otp, err := utils.SecureRandom6Digit()
+	if err != nil {
+		slog.Error("Errr generating otp", "err", err)
+	}
 
 	// some more logic
-}
+	// New redis client
+	rdb := config.NewRedisClient()
+	defer rdb.Close()
 
-func Signup(w http.ResponseWriter, r *http.Request) {
-	fmt.Println()
+	// context for redis
+	ctx := context.Background()
+
+	err = rdb.Set(ctx, rBody.Email, otp, 600).Err()
+	if err != nil {
+		slog.Error("Error storing email otp in redis", "err", err)
+		return
+	}
 }
