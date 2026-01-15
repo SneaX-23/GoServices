@@ -33,7 +33,7 @@ func main() {
 
 	// Ensure the pool is closed when the application shuts down
 	defer db.Close()
-
+	rdb := config.NewRedisClient()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -48,8 +48,9 @@ func main() {
 
 	// Initializze repository
 	userRepo := repository.NewUserRepository(db)
+	redisOtpRepo := repository.NewRedisOtpRepo(rdb)
 
-	userhandler := handlers.NewUserHandler(userRepo)
+	userhandler := handlers.NewUserHandler(userRepo, redisOtpRepo)
 
 	// Setup routes
 	mux := http.NewServeMux()

@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 
-	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/SneaX-23/GoServices/auth-service/internal/utils"
 )
 
 type UserHandler struct {
 	repo repository.UserRepository
+	rdb  repository.OTPRepository
 }
 
-func NewUserHandler(repo repository.UserRepository) *UserHandler {
-	return &UserHandler{repo: repo}
+func NewUserHandler(repo repository.UserRepository, rdb repository.OTPRepository) *UserHandler {
+	return &UserHandler{repo: repo, rdb: rdb}
 }
 
 type NewUserData struct {
@@ -66,16 +67,11 @@ func (h *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Errr generating otp", "err", err)
 	}
-
-	// some more logic
-	// New redis client
-	rdb := config.NewRedisClient()
-	defer rdb.Close()
-
+	strOpt := strconv.Itoa(int(otp))
 	// context for redis
 	ctx := context.Background()
 
-	err = rdb.Set(ctx, rBody.Email, otp, 600).Err()
+	err = h.rdb.Store(ctx, rBody.Email, strOpt)
 	if err != nil {
 		slog.Error("Error storing email otp in redis", "err", err)
 		return
