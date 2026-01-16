@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -16,8 +17,12 @@ func GetRedisHost() string {
 
 func NewRedisClient() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     GetRedisHost(),
-		Password: "",
-		DB:       0,
+		Addr:         GetRedisHost(),
+		Password:     "",
+		DB:           0,
+		MaxIdleConns: 10,
+		PoolSize:     10,
+		MinIdleConns: 2,
+		PoolTimeout:  30 * time.Second,
 	})
 }
