@@ -10,7 +10,9 @@ import (
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/database"
 	"github.com/SneaX-23/GoServices/auth-service/internal/handlers"
+	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
+	"github.com/SneaX-23/GoServices/auth-service/internal/service"
 )
 
 func main() {
@@ -46,11 +48,20 @@ func main() {
 	}
 	logger.Info("application started successfully", "db_time", now)
 
-	// Initializze repository
+	// Initialize repository
 	userRepo := repository.NewUserRepository(db)
+
+	// Initialize redis
 	redisOtpRepo := repository.NewRedisOtpRepo(rdb)
 
-	userhandler := handlers.NewUserHandler(userRepo, redisOtpRepo)
+	// Initialize producer
+	producer := messaging.NewKafkaProducer("auth-events")
+	defer producer.Close()
+
+	//
+	service := service.NewAuthService(userRepo, redisOtpRepo, producer)
+
+	userhandler := handlers.NewUserHandler(service)
 
 	// Setup routes
 	mux := http.NewServeMux()

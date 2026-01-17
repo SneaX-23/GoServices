@@ -8,7 +8,7 @@ import (
 )
 
 type Producer interface {
-	PublishUserEvent(ctx context.Context, user User) error
+	PublishUserEvent(ctx context.Context, email, otp string) error
 	Close() error
 }
 
@@ -30,3 +30,4 @@ func NewKafkaProducer(topic string) *KafkaProducer {
 		},
 	}
 }
+

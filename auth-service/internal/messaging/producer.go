@@ -4,21 +4,23 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/segmentio/kafka-go"
 )
 
-type User struct {
-	Email string `json:"email"`
-}
+func (p *KafkaProducer) PublishUserEvent(ctx context.Context, email, otp string) error {
+	var payload domain.VerifEmailPayload
+	payload.Type = "verify-email"
+	payload.Data.Email = email
+	payload.Data.Otp = otp
 
-func (p *KafkaProducer) PublishUserEvent(ctx context.Context, user User) error {
-	payload, err := json.Marshal(user)
+	authPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
 	return p.writer.WriteMessages(ctx, kafka.Message{
-		Value: payload,
+		Value: authPayload,
 	})
 }
 

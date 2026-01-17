@@ -7,31 +7,21 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
+	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
+	"github.com/SneaX-23/GoServices/auth-service/internal/service"
 	"github.com/SneaX-23/GoServices/auth-service/internal/utils"
 )
 
-type UserHandler struct {
-	repo repository.UserRepository
-	rdb  repository.OTPRepository
+type AuthHandler struct {
+	service *service.AuthService
 }
 
-func NewUserHandler(repo repository.UserRepository, rdb repository.OTPRepository) *UserHandler {
-	return &UserHandler{repo: repo, rdb: rdb}
+func NewUserHandler(service *service.AuthService) *AuthHandler {
+	return &AuthHandler{service: service}
 }
 
-type NewUserData struct {
-	UserName string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type EmailRequest struct {
-	Email string `json:"email"`
-}
-
-func (h *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
-	var rBody EmailRequest
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	var rBody domain.EmailRequest
 
 	// Decode json
 	if err := json.NewDecoder(r.Body).Decode(&rBody); err != nil {
@@ -41,7 +31,7 @@ func (h *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if email already registered
-	user, err := h.repo.GetByEmail(r.Context(), rBody.Email)
+	user, err := h.service.GetUserByEmail(r.Context(), rBody.Email)
 	if err != nil {
 		slog.Error("Database error", "err", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -67,13 +57,22 @@ func (h *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Errr generating otp", "err", err)
 	}
+
+	// convert otp to string to store in redis cache
 	strOpt := strconv.Itoa(int(otp))
+
 	// context for redis
 	ctx := context.Background()
 
-	err = h.rdb.Store(ctx, rBody.Email, strOpt)
+	err = h.service.CacheOtp(ctx, rBody.Email, strOpt)
 	if err != nil {
 		slog.Error("Error storing email otp in redis", "err", err)
+		return
+	}
+
+	err = h.service.QueueEvent(ctx, rBody.Email, strOpt)
+	if err != nil {
+		slog.Error("Error emiting kafka event", "err", err)
 		return
 	}
 }
