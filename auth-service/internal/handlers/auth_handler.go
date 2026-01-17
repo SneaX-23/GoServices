@@ -64,15 +64,9 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	// context for redis
 	ctx := context.Background()
 
-	err = h.service.CacheOtp(ctx, rBody.Email, strOpt)
+	err = h.service.CacheAndEmit(ctx, rBody.Email, strOpt)
 	if err != nil {
-		slog.Error("Error storing email otp in redis", "err", err)
-		return
-	}
-
-	err = h.service.QueueEvent(ctx, rBody.Email, strOpt)
-	if err != nil {
-		slog.Error("Error emiting kafka event", "err", err)
+		slog.Error("Error during caching or emiting", "err", err)
 		return
 	}
 }

@@ -30,10 +30,12 @@ func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*domain
 	return user, nil
 }
 
-func (s *AuthService) CacheOtp(ctx context.Context, email, otp string) error {
-	return s.cache.Store(ctx, email, otp)
-}
-
-func (s *AuthService) QueueEvent(ctx context.Context, email, otp string) error {
+func (s *AuthService) CacheAndEmit(ctx context.Context, email, otp string) error {
+	// cache otp
+	err := s.cache.Store(ctx, email, otp)
+	if err != nil {
+		return err
+	}
+	// emit kafka event
 	return s.queue.PublishUserEvent(ctx, email, otp)
 }
