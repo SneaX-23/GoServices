@@ -55,7 +55,8 @@ func main() {
 	redisOtpRepo := repository.NewRedisOtpRepo(rdb)
 
 	// Initialize producer
-	producer := messaging.NewKafkaProducer("auth-events")
+	kafkaBroker := os.Getenv("KAFKA_BROKER")
+	producer := messaging.NewKafkaProducer(kafkaBroker, "auth-events")
 	defer producer.Close()
 
 	//
