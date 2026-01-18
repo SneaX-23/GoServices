@@ -8,7 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (p *KafkaProducer) PublishUserEvent(ctx context.Context, email, otp string) error {
+func (p *kafkaProducer) PublishUserEvent(ctx context.Context, email, otp string) error {
 	var payload domain.VerifEmailPayload
 	payload.Type = "verify-email"
 	payload.Data.Email = email
@@ -24,6 +24,6 @@ func (p *KafkaProducer) PublishUserEvent(ctx context.Context, email, otp string)
 	})
 }
 
-func (p *KafkaProducer) Close() error {
+func (p *kafkaProducer) Close() error {
 	return p.writer.Close()
 }

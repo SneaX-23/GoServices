@@ -11,12 +11,12 @@ type Producer interface {
 	Close() error
 }
 
-type KafkaProducer struct {
+type kafkaProducer struct {
 	writer *kafka.Writer
 }
 
 func NewKafkaProducer(broker, topic string) Producer {
-	return &KafkaProducer{
+	return &kafkaProducer{
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(broker),
 			Topic:    topic,
