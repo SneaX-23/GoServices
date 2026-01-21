@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/stretchr/testify/assert"
@@ -85,6 +86,53 @@ func TestCacheAndEmit_TableDriven(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetUserByEmail(t *testing.T) {
+	tests := []struct {
+		name          string
+		email         string
+		mockReturn    *domain.User
+		mockErr       error
+		expectedError bool
+	}{
+		{
+			name:  "Success - User Found",
+			email: "found@you.com",
+			mockReturn: &domain.User{
+				Email: "found@you.com",
+			},
+			mockErr:       nil,
+			expectedError: false,
+		},
+		{
+			name:          "Error - Database Failure",
+			email:         "error@exa.com",
+			mockReturn:    nil,
+			mockErr:       errors.New("db connection lost"),
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB := repository.NewMockUserRepository(t)
+
+			svc := NewAuthService(mockDB, nil, nil)
+
+			mockDB.On("GetByEmail", mock.Anything, tt.email).Return(tt.mockReturn, tt.mockErr)
+
+			user, err := svc.GetUserByEmail(context.Background(), tt.email)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+				assert.Nil(t, user)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.email, user.Email)
 			}
 		})
 	}
