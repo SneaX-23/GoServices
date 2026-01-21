@@ -69,3 +69,5 @@ hmm.txt
 
 frontend/
 testVim.txt
+
+*.out
