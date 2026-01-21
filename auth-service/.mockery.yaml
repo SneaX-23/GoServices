@@ -1,0 +1,9 @@
+packages:
+  github.com/SneaX-23/GoServices/auth-service/internal/repository:
+    interfaces:
+      OTPRepository: {}
+      UserRepository: {}
+
+  github.com/SneaX-23/GoServices/auth-service/internal/messaging:
+    interfaces:
+      Producer: {}
