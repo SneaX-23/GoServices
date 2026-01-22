@@ -70,3 +70,34 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
+	var req domain.VerifyOTP
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.Error("JSON decode error", "err", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	verifyOTP, err := h.service.GetAndVerifyOTP(r.Context(), req.Email, req.OTP)
+	if err != nil {
+		slog.Error("Cache error", "err", err)
+		http.Error(w, "Internal cach error", http.StatusInternalServerError)
+		return
+	}
+
+	if verifyOTP == false {
+		w.Header().Set("Content-type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"success": false,
+			"message": "Wrong otp",
+		})
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"success": false,
+		"message": "Otp verified successfuly",
+	})
+}
