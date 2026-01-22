@@ -53,3 +53,11 @@ func (s *AuthService) GetAndVerifyOTP(ctx context.Context, email string, otp int
 
 	return strOTP == valOTP, nil
 }
+
+func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
+	user, err := s.db.GetByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

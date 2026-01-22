@@ -11,6 +11,7 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) error
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
+	GetByUsername(ctx context.Context, username string) (*domain.User, error)
 }
 
 type postgresUserRepository struct {
@@ -42,5 +43,17 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch user: %w", err)
 	}
+	return &user, nil
+}
+
+func (r *postgresUserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	query := `SELECT * FROM users WHERE username = $1`
+
+	var user domain.User
+	err := r.db.Pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.Email, &user.Username)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user by username: %w", err)
+	}
+
 	return &user, nil
 }
