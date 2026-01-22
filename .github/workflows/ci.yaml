@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Run unit tests
+        working-directory: auth-service
+        run: go test ./internal/service/...
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Go security
+        working-directory: auth-service
+        run: gosec ./internal/...
+
+  styles:
+    name: Style
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+  
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+  
+      - name: Code Formatting
+        working-directory: auth-service
+        run: |
+          test -z "$(gofmt -l .)"
+  
+      - name: Static Check
+        working-directory: auth-service
+        uses: dominikh/staticcheck-action@v1
+        with:
+          version: "latest"
+          install-go: false
