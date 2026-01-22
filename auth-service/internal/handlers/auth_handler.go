@@ -101,3 +101,35 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		"message": "Otp verified successfuly",
 	})
 }
+
+func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
+	var username string
+
+	if err := json.NewDecoder(r.Body).Decode(&username); err != nil {
+		slog.Error("JSON decode error", "err", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		slog.Error("Server error", "err", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if user != nil {
+		w.Header().Set("Content-type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"success": false,
+			"message": "Username already exists",
+		})
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"message": username + " is available",
+	})
+}
