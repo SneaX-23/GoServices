@@ -185,7 +185,7 @@ func TestGetAndVerifyOTP(t *testing.T) {
 
 			svc := NewAuthService(mockDB, mockOTP, mockPub)
 
-			mockOTP.On("GetOTP", mock.Anything, tt.email).Return(tt.mockReturn, tt.mockError)
+			mockOTP.On("GetOtp", mock.Anything, tt.email).Return(tt.mockReturn, tt.mockError)
 
 			otpVerify, err := svc.GetAndVerifyOTP(context.Background(), tt.email, tt.otp)
 
