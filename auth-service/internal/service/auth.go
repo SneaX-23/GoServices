@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
@@ -38,4 +39,17 @@ func (s *AuthService) CacheAndEmit(ctx context.Context, email, otp string) error
 	}
 	// emit kafka event
 	return s.queue.PublishUserEvent(ctx, email, otp)
+}
+
+func (s *AuthService) GetAndVerifyOTP(ctx context.Context, email string, otp int) (bool, error) {
+	// convert string to otp
+	strOTP := strconv.Itoa(int(otp))
+
+	// get otp from redis cache
+	valOTP, err := s.cache.GetOtp(ctx, email)
+	if err != nil {
+		return false, err
+	}
+
+	return strOTP == valOTP, nil
 }
