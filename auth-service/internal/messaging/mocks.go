@@ -15,8 +15,7 @@ import (
 func NewMockProducer(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockProducer {
+}) *MockProducer {
 	mock := &MockProducer{}
 	mock.Mock.Test(t)
 

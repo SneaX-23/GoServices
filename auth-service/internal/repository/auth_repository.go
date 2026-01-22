@@ -26,7 +26,7 @@ func NewUserRepository(db *database.Database) UserRepository {
 func (r *postgresUserRepository) Create(ctx context.Context, user *domain.User) error {
 	query := `INSERT INTO users (email, name) values ($1, $2) returning id`
 
-	err := r.db.Pool.QueryRow(ctx, query, user.Email, user.Username).Scan(&user.Id)
+	err := r.db.Pool.QueryRow(ctx, query, user.Email, user.Username).Scan(&user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)
 	}
@@ -38,7 +38,7 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 	query := `SELECT id, email, name FROM users WHERE email =$1`
 
 	var user domain.User
-	err := r.db.Pool.QueryRow(ctx, query, email).Scan(&user.Id, &user.Email, &user.Username)
+	err := r.db.Pool.QueryRow(ctx, query, email).Scan(&user.ID, &user.Email, &user.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch user: %w", err)
 	}
