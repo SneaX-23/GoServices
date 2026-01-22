@@ -10,41 +10,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+          cache: true
 
       - name: Run unit tests
-        run: go test ./auth-service/internal/service/...
+        working-directory: auth-service
+        run: go test ./internal/service/...
 
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Go security
-        run: gosec ./auth-service/internal/...
+        working-directory: auth-service
+        run: gosec ./internal/...
 
   styles:
     name: Style
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v4
+  
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
+          cache: true
+  
       - name: Code Formatting
+        working-directory: auth-service
         run: |
           test -z "$(gofmt -l .)"
-
+  
       - name: Static Check
+        working-directory: auth-service
         uses: dominikh/staticcheck-action@v1
         with:
           version: "latest"
+          install-go: false
