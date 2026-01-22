@@ -137,3 +137,67 @@ func TestGetUserByEmail(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAndVerifyOTP(t *testing.T) {
+	tests := []struct {
+		name          string
+		email         string
+		otp           int
+		same          bool
+		mockReturn    string
+		mockError     error
+		expectedError bool
+	}{
+		{
+			name:          "Success - OTP is same",
+			email:         "otp@otp.test",
+			otp:           123456,
+			same:          true,
+			mockReturn:    "123456",
+			mockError:     nil,
+			expectedError: false,
+		},
+		{
+			name:          "OTP is not same",
+			email:         "otp@fail.test",
+			otp:           222121,
+			same:          false,
+			mockReturn:    "221212",
+			mockError:     nil,
+			expectedError: false,
+		},
+		{
+			name:          "Cache error",
+			email:         "cache@fail.test",
+			otp:           123566,
+			same:          false,
+			mockReturn:    "",
+			mockError:     errors.New("Cache failure"),
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB := repository.NewMockUserRepository(t)
+			mockOTP := repository.NewMockOTPRepository(t)
+			mockPub := messaging.NewMockProducer(t)
+
+			svc := NewAuthService(mockDB, mockOTP, mockPub)
+
+			mockOTP.On("GetOTP", mock.Anything, tt.email).Return(tt.mockReturn, tt.mockError)
+
+			otpVerify, err := svc.GetAndVerifyOTP(context.Background(), tt.email, tt.otp)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.same, otpVerify)
+
+			mockOTP.AssertCalled(t, "GetOtp", mock.Anything, tt.email)
+		})
+	}
+}

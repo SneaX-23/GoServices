@@ -87,7 +87,7 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if verifyOTP == false {
+	if !verifyOTP {
 		w.Header().Set("Content-type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"success": false,

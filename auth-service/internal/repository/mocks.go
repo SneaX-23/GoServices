@@ -16,8 +16,7 @@ import (
 func NewMockUserRepository(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockUserRepository {
+}) *MockUserRepository {
 	mock := &MockUserRepository{}
 	mock.Mock.Test(t)
 
@@ -169,8 +168,7 @@ func (_c *MockUserRepository_GetByEmail_Call) RunAndReturn(run func(ctx context.
 func NewMockOTPRepository(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockOTPRepository {
+}) *MockOTPRepository {
 	mock := &MockOTPRepository{}
 	mock.Mock.Test(t)
 
@@ -190,6 +188,72 @@ type MockOTPRepository_Expecter struct {
 
 func (_m *MockOTPRepository) EXPECT() *MockOTPRepository_Expecter {
 	return &MockOTPRepository_Expecter{mock: &_m.Mock}
+}
+
+// GetOtp provides a mock function for the type MockOTPRepository
+func (_mock *MockOTPRepository) GetOtp(ctx context.Context, email string) (string, error) {
+	ret := _mock.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOtp")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return returnFunc(ctx, email)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = returnFunc(ctx, email)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockOTPRepository_GetOtp_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetOtp'
+type MockOTPRepository_GetOtp_Call struct {
+	*mock.Call
+}
+
+// GetOtp is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+func (_e *MockOTPRepository_Expecter) GetOtp(ctx interface{}, email interface{}) *MockOTPRepository_GetOtp_Call {
+	return &MockOTPRepository_GetOtp_Call{Call: _e.mock.On("GetOtp", ctx, email)}
+}
+
+func (_c *MockOTPRepository_GetOtp_Call) Run(run func(ctx context.Context, email string)) *MockOTPRepository_GetOtp_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockOTPRepository_GetOtp_Call) Return(s string, err error) *MockOTPRepository_GetOtp_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockOTPRepository_GetOtp_Call) RunAndReturn(run func(ctx context.Context, email string) (string, error)) *MockOTPRepository_GetOtp_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Store provides a mock function for the type MockOTPRepository
