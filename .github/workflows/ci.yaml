@@ -1,46 +1,57 @@
 name: ci
+
 on:
   pull_request:
     branches: [master]
+
 jobs:
   tests:
-    name: Tests
+    name: Tests & Security
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: auth-service
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
           cache: true
+
       - name: Run unit tests
-        working-directory: auth-service
         run: go test ./internal/service/...
-      - name: Install gosec
-        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
-      - name: Go security
-        working-directory: auth-service
-        run: gosec ./internal/...
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./internal/...
+
   styles:
-    name: Style
+    name: Style & Lint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: auth-service
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
           cache: true
+
       - name: Code Formatting
-        working-directory: auth-service
         run: |
           if [ -n "$(gofmt -l .)" ]; then
             echo "The following files are not formatted:"
             gofmt -l .
             exit 1
           fi
+
       - name: Static Check
-        working-directory: auth-service
         uses: dominikh/staticcheck-action@v1
         with:
           version: "latest"
           install-go: false
-          working-directory: auth-service
+          working-directory: "auth-service"
