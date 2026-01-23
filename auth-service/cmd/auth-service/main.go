@@ -71,7 +71,16 @@ func main() {
 
 	mux.HandleFunc("POST /verify-email", userhandler.VerifyEmail)
 
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
 	// Listen on port :8080
 	slog.Info("Server starting on :8080")
-	http.ListenAndServe(":8080", mux)
+	if err := server.ListenAndServe(); err != nil {
+		slog.Error("Server failed to start", "err", err)
+	}
 }
