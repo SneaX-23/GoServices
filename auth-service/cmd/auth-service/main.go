@@ -13,6 +13,7 @@ import (
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -62,14 +63,24 @@ func main() {
 	//
 	service := service.NewAuthService(userRepo, redisOtpRepo, producer)
 
-	userhandler := handlers.NewUserHandler(service)
+	v := validator.New()
+	userhandler := handlers.NewUserHandler(service, v)
 
 	// Setup routes
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /verify-email", userhandler.VerifyEmail)
 
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
 	// Listen on port :8080
 	slog.Info("Server starting on :8080")
-	http.ListenAndServe(":8080", mux)
+	if err := server.ListenAndServe(); err != nil {
+		slog.Error("Server failed to start", "err", err)
+	}
 }

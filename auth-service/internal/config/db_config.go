@@ -29,8 +29,8 @@ func LoadDatabaseConfig() *DatabaseConfig {
 		Password:          mustEnv("DB_PASSWORD"),
 		Name:              mustEnv("DB_NAME"),
 		SSLMode:           getEnv("DB_SSLMODE", "disable"),
-		MaxConns:          int32(getEnvInt("DB_MAX_CONNS", 20)),
-		MinConns:          int32(getEnvInt("DB_MIN_CONNS", 5)),
+		MaxConns:          getEnvInt32("DB_MAX_CONNS", 20),
+		MinConns:          getEnvInt32("DB_MIN_CONNS", 5),
 		MaxConnLifetime:   getEnvDuration("DB_MAX_CONN_LIFETIME", 1*time.Hour),
 		MaxConnIdleTime:   getEnvDuration("DB_MAX_CONN_IDLE_TIME", 30*time.Minute),
 		HealthCheckPeriod: getEnvDuration("DB_HEALTH_CHECK_PERIOD", 1*time.Minute),
@@ -61,10 +61,11 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func getEnvInt(key string, fallback int) int {
+func getEnvInt32(key string, fallback int32) int32 {
 	if v := os.Getenv(key); v != "" {
-		if i, err := strconv.Atoi(v); err == nil {
-			return i
+		i, err := strconv.ParseInt(v, 10, 32)
+		if err == nil {
+			return int32(i)
 		}
 	}
 	return fallback

@@ -16,7 +16,8 @@ import (
 func NewMockUserRepository(t interface {
 	mock.TestingT
 	Cleanup(func())
-}) *MockUserRepository {
+},
+) *MockUserRepository {
 	mock := &MockUserRepository{}
 	mock.Mock.Test(t)
 
@@ -163,12 +164,81 @@ func (_c *MockUserRepository_GetByEmail_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// GetByUsername provides a mock function for the type MockUserRepository
+func (_mock *MockUserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+	ret := _mock.Called(ctx, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUsername")
+	}
+
+	var r0 *domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.User, error)); ok {
+		return returnFunc(ctx, username)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.User); ok {
+		r0 = returnFunc(ctx, username)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, username)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockUserRepository_GetByUsername_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUsername'
+type MockUserRepository_GetByUsername_Call struct {
+	*mock.Call
+}
+
+// GetByUsername is a helper method to define mock.On call
+//   - ctx context.Context
+//   - username string
+func (_e *MockUserRepository_Expecter) GetByUsername(ctx interface{}, username interface{}) *MockUserRepository_GetByUsername_Call {
+	return &MockUserRepository_GetByUsername_Call{Call: _e.mock.On("GetByUsername", ctx, username)}
+}
+
+func (_c *MockUserRepository_GetByUsername_Call) Run(run func(ctx context.Context, username string)) *MockUserRepository_GetByUsername_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockUserRepository_GetByUsername_Call) Return(user *domain.User, err error) *MockUserRepository_GetByUsername_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockUserRepository_GetByUsername_Call) RunAndReturn(run func(ctx context.Context, username string) (*domain.User, error)) *MockUserRepository_GetByUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewMockOTPRepository creates a new instance of MockOTPRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMockOTPRepository(t interface {
 	mock.TestingT
 	Cleanup(func())
-}) *MockOTPRepository {
+},
+) *MockOTPRepository {
 	mock := &MockOTPRepository{}
 	mock.Mock.Test(t)
 
