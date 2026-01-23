@@ -13,6 +13,7 @@ import (
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -62,7 +63,8 @@ func main() {
 	//
 	service := service.NewAuthService(userRepo, redisOtpRepo, producer)
 
-	userhandler := handlers.NewUserHandler(service)
+	v := validator.New()
+	userhandler := handlers.NewUserHandler(service, v)
 
 	// Setup routes
 	mux := http.NewServeMux()

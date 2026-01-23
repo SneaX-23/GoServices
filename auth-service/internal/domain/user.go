@@ -7,7 +7,7 @@ type User struct {
 }
 
 type EmailRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 type Payload struct {
@@ -23,4 +23,8 @@ type VerifEmailPayload struct {
 type VerifyOTP struct {
 	Email string `json:"email"`
 	OTP   int    `json:"otp"`
+}
+
+type UsernameRequest struct {
+	Username string `json:"username"`
 }

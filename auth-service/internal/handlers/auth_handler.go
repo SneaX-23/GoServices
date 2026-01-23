@@ -10,14 +10,19 @@ import (
 	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
 	"github.com/SneaX-23/GoServices/auth-service/internal/utils"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandler struct {
-	service *service.AuthService
+	service  *service.AuthService
+	validate *validator.Validate
 }
 
-func NewUserHandler(service *service.AuthService) *AuthHandler {
-	return &AuthHandler{service: service}
+func NewUserHandler(service *service.AuthService, validate *validator.Validate) *AuthHandler {
+	return &AuthHandler{
+		service:  service,
+		validate: validate,
+	}
 }
 
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +32,17 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&rBody); err != nil {
 		slog.Error("JSON decode error", "err", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// validate email address
+	if err := h.validate.Struct(rBody); err != nil {
+		slog.Warn("Validation failed")
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid input:please provide a valid email",
+		})
 		return
 	}
 
@@ -71,15 +87,18 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// VerifyOTP: sends otp if email not registered
 func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var req domain.VerifyOTP
 
+	// Decode user entered otp
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		slog.Error("JSON decode error", "err", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	// GetAndVerifyOTP takes otp from redis and compares with userentered opt
 	verifyOTP, err := h.service.GetAndVerifyOTP(r.Context(), req.Email, req.OTP)
 	if err != nil {
 		slog.Error("Cache error", "err", err)
@@ -102,8 +121,9 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Check if a username exists
 func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
-	var username string
+	var username domain.UsernameRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&username); err != nil {
 		slog.Error("JSON decode error", "err", err)
@@ -111,13 +131,15 @@ func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetUserByUsername(r.Context(), username)
+	// Tries to get user by username
+	user, err := h.service.GetUserByUsername(r.Context(), username.Username)
 	if err != nil {
 		slog.Error("Server error", "err", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
+	// If username exists user will not be empty
 	if user != nil {
 		w.Header().Set("Content-type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -130,6 +152,6 @@ func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"success": true,
-		"message": username + " is available",
+		"message": username.Username + " is available",
 	})
 }
