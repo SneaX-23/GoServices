@@ -63,6 +63,7 @@ func main() {
 	//
 	service := service.NewAuthService(userRepo, redisOtpRepo, producer)
 
+	// go-playground validator to validate user input
 	v := validator.New()
 	userhandler := handlers.NewUserHandler(service, v)
 
