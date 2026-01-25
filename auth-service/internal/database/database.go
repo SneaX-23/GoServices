@@ -9,6 +9,8 @@ import (
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type SlogAdapter struct {
@@ -39,10 +41,11 @@ func (s *SlogAdapter) Log(ctx context.Context, level tracelog.LogLevel, msg stri
 }
 
 type Database struct {
-	Pool *pgxpool.Pool
+	Pool   *pgxpool.Pool
+	tracer trace.Tracer
 }
 
-func New(cfg *config.DatabaseConfig, logger *slog.Logger) (*Database, error) {
+func New(cfg *config.DatabaseConfig, logger *slog.Logger, tracer trace.Tracer) (*Database, error) {
 	// Build Connection String
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name, cfg.SSLMode)
@@ -75,13 +78,24 @@ func New(cfg *config.DatabaseConfig, logger *slog.Logger) (*Database, error) {
 	// Health Check
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	ctx, span := tracer.Start(ctx, "database.health_check")
+	defer span.End()
+
 	if err := pool.Ping(ctx); err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("db ping failed: %w", err)
 	}
 
+	span.SetAttributes(
+		attribute.String("db.host", cfg.Host),
+		attribute.String("db.name", cfg.Name),
+		attribute.String("db.System", "postgresql"),
+	)
+
 	logger.Info("database connection established", "host", cfg.Host, "db", cfg.Name)
 
-	return &Database{Pool: pool}, nil
+	return &Database{Pool: pool, tracer: tracer}, nil
 }
 
 func (db *Database) Close() {
