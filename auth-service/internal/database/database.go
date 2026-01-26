@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"go.opentelemetry.io/otel/attribute"
@@ -63,11 +64,8 @@ func New(cfg *config.DatabaseConfig, logger *slog.Logger, tracer trace.Tracer) (
 	pgxConfig.MaxConnIdleTime = cfg.MaxConnIdleTime
 	pgxConfig.HealthCheckPeriod = cfg.HealthCheckPeriod
 
-	// Attach simple slog tracer
-	pgxConfig.ConnConfig.Tracer = &tracelog.TraceLog{
-		Logger:   &SlogAdapter{l: logger},
-		LogLevel: tracelog.LogLevelInfo, // Set to LogLevelDebug to see all SQL queries
-	}
+	// Attach opentelemetry tracer to pgx config
+	pgxConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	// Create the Pool
 	pool, err := pgxpool.NewWithConfig(context.Background(), pgxConfig)

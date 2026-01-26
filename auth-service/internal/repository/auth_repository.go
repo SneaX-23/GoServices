@@ -38,9 +38,9 @@ func (r *postgresUserRepository) Create(ctx context.Context, user *domain.User) 
 		attribute.String("user.username", user.Username),
 	)
 
-	query := `INSERT INTO users (email, name) values ($1, $2) returning id`
+	query := `INSERT INTO users (email, name, password) values ($1, $2, $3) returning id`
 
-	err := r.db.Pool.QueryRow(ctx, query, user.Email, user.Username).Scan(&user.ID)
+	err := r.db.Pool.QueryRow(ctx, query, user.Email, user.Username, user.Password).Scan(&user.ID)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to innsert user")

@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
@@ -208,5 +209,68 @@ func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"success": true,
 		"message": username.Username + " is available",
+	})
+}
+
+func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
+	ctx, span := h.tracer.Start(r.Context(), "handler.Sighup")
+	defer span.End()
+
+	var user domain.User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "body error")
+		slog.Error("error decoding json body", "err", err)
+		http.Error(w, "Invalid json body", http.StatusBadRequest)
+		return
+	}
+	span.SetAttributes(
+		attribute.String("user.Username", user.Username),
+		attribute.String("user.Email", user.Email),
+	)
+
+	userExits, err := h.service.GetUserByUsername(ctx, user.Username)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "server error")
+		slog.Error("Server error", "err", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if userExits != nil {
+		span.SetAttributes(attribute.Bool("user.exists", true))
+		span.SetStatus(codes.Ok, "user already exists")
+		w.Header().Set("Content-type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"success": false,
+			"message": "User already exists",
+		})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "hashing error")
+		slog.Error("Error while hashing password", "err", err)
+		http.Error(w, "Error while hashing password", http.StatusInternalServerError)
+		return
+	}
+	user.Password = string(hash)
+	span.SetAttributes(attribute.Bool("password.hash", true))
+
+	if err := h.service.CreateUser(ctx, user); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "error creating user")
+		slog.Error("Error while creating user", "err", err)
+		http.Error(w, "Internal error while creating user", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"message": "Account created successfully",
 	})
 }
