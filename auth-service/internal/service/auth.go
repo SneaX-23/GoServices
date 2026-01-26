@@ -122,3 +122,18 @@ func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*
 	return user, nil
 }
 
+func (s *AuthService) CreateUser(ctx context.Context, user domain.User) error {
+	ctx, span := s.tracer.Start(ctx, "service.CreateUser")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user.username", user.Username),
+		attribute.String("user.email", user.Email),
+	)
+
+	if err := s.db.Create(ctx, &user); err != nil {
+		return err
+	}
+	return nil
+}
+
