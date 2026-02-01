@@ -76,9 +76,13 @@ func main() {
 	kafkaBroker := os.Getenv("KAFKA_BROKER")
 	producer := messaging.NewKafkaProducer(kafkaBroker, "auth-events", tracer)
 	defer producer.Close()
-
+	secret := os.Getenv("JWT_ACCESS_SECRET")
+	if secret == "" {
+		slog.Error("JWT_ACCESS_SECRET not set", "secret", secret)
+		os.Exit(1)
+	}
 	// Initialize service
-	authService := service.NewAuthService(userRepo, redisOtpRepo, producer, tracer)
+	authService := service.NewAuthService(userRepo, redisOtpRepo, producer, tracer, secret)
 
 	v := validator.New()
 	userhandler := handlers.NewUserHandler(authService, v, tracer)

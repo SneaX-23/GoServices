@@ -12,19 +12,24 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    hashed_token TEXT NOT NULL UNIQUE,
 
+    hashed_token TEXT NOT NULL UNIQUE,
     user_id UUID NOT NULL,
+
     replaced_by UUID NULL,
 
-    expires_at TIMESTAMPZ NOT NULL,
-    created_at TIMESTAMPZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_refresh_tokens_user 
+    CONSTRAINT fk_refresh_tokens_user
         FOREIGN KEY (user_id)
-        REFERENCES users(id) 
-        on DELETE cascade
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_refresh_tokens_replaced_by
+        FOREIGN KEY (replaced_by)
+        REFERENCES refresh_tokens(id)
 );
 
 CREATE INDEX idx_users_email ON users(email);

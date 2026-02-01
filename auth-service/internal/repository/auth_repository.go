@@ -74,6 +74,10 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 	var user domain.User
 	err := r.db.Pool.QueryRow(ctx, query, email).Scan(&user.ID, &user.Email, &user.Username)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			span.SetStatus(codes.Ok, "user not found")
+			return nil, nil
+		}
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to fetch user")
 		return nil, fmt.Errorf("failed to fetch user: %w", err)
@@ -94,6 +98,10 @@ func (r *postgresUserRepository) GetByUsername(ctx context.Context, username str
 	var user domain.User
 	err := r.db.Pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.Email, &user.Username)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			span.SetStatus(codes.Ok, "user not found")
+			return nil, nil
+		}
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to fetch user by username")
 		return nil, fmt.Errorf("failed to fetch user by username: %w", err)
