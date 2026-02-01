@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type User struct {
 	ID       string `json:"id"`
 	Email    string `json:"email"`
@@ -28,4 +30,14 @@ type VerifyOTP struct {
 
 type UsernameRequest struct {
 	Username string `json:"username"`
+}
+
+type ExistingRefreshToken struct {
+	ID          string `json:"id"`
+	HashedToken string `json:"hashedtoken"`
+	UserID      string `json:"userID"`
+	ReplacedBy  string `json:"replacedBy"`
+	ExpiresAt   time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
