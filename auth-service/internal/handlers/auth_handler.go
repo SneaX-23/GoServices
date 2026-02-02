@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
+	"github.com/SneaX-23/GoServices/auth-service/internal/telemetry"
 	"github.com/SneaX-23/GoServices/auth-service/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"go.opentelemetry.io/otel/attribute"
@@ -26,12 +28,21 @@ type AuthHandler struct {
 	tracer   trace.Tracer
 }
 
-func NewUserHandler(service *service.AuthService, validate *validator.Validate, tracer trace.Tracer) *AuthHandler {
-	return &AuthHandler{
+func NewUserHandler(service *service.AuthService, validate *validator.Validate, tracer trace.Tracer, port int) *http.Server {
+	handler := &AuthHandler{
 		service:  service,
 		validate: validate,
 		tracer:   tracer,
 	}
+	wrappedHandler := telemetry.HTTPMiddleware(handler.RegisteredRoutes())
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%d", port),
+		Handler:      wrappedHandler,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+	return server
 }
 
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -85,24 +86,9 @@ func main() {
 	authService := service.NewAuthService(userRepo, redisOtpRepo, producer, tracer, secret)
 
 	v := validator.New()
-	userhandler := handlers.NewUserHandler(authService, v, tracer)
 
-	// Setup routes
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /verify-email", userhandler.VerifyEmail)
-	mux.HandleFunc("POST /verify-otp", userhandler.VerifyOTP)
-	mux.HandleFunc("POST /check-username", userhandler.CheckUsername)
-
-	// Wrap with OpenTelemetry middleware
-	wrappedMux := telemetry.HTTPMiddleware(mux)
-
-	server := &http.Server{
-		Addr:         ":8080",
-		Handler:      wrappedMux,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-	}
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	server := handlers.NewUserHandler(authService, v, tracer, port)
 
 	// Start server in goroutine
 	go func() {
