@@ -55,6 +55,18 @@ func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*domain
 	return user, nil
 }
 
+func (s *AuthService) GetEmailByID(ctx context.Context, userID string) (string, error) {
+	ctx, span := s.tracer.Start(ctx, "service.GetEmailById")
+	defer span.End()
+
+	email, err := s.db.GetEmailByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	return email, nil
+}
+
 func (s *AuthService) CacheAndEmit(ctx context.Context, email, otp string) error {
 	ctx, span := s.tracer.Start(ctx, "service.CacheAndEmit")
 	defer span.End()

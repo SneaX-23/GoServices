@@ -9,3 +9,12 @@ migration-up:
 
 migration-down:
 	goose -dir $(MIGRATION_DIR) postgres $(DB_DNS) down
+
+build_proto:
+	@echo "Creating genproto directory..."
+	mkdir -p internal/genproto
+	@echo "Generating Go code from proto..."
+	protoc --proto_path=proto \
+		--go_out=internal/genproto --go_opt=paths=source_relative \
+		--go-grpc_out=internal/genproto --go-grpc_opt=paths=source_relative \
+		proto/auth.proto

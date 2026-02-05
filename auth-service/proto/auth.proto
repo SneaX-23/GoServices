@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/SneaX-23/GoServices/auth-service/internal/genproto";
+
+service AuthService {
+  rpc GetUserEmail(UserEmailRequest) returns (UserEmailResponse) {}
+}
+
+message UserEmailRequest {
+  string user_id = 1;
+}
+
+message UserEmailResponse {
+  string email = 1;
+}

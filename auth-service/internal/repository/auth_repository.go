@@ -23,6 +23,7 @@ type UserRepository interface {
 	RevokeAllTokens(ctx context.Context, userID string) error
 	DeleteToken(ctx context.Context, id string) error
 	RotateRefreshToken(ctx context.Context, userID, oldTokenID, newHashedToken string) error
+	GetEmailByID(ctx context.Context, userID string) (string, error)
 }
 
 type postgresUserRepository struct {
@@ -109,6 +110,24 @@ func (r *postgresUserRepository) GetByUsername(ctx context.Context, username str
 
 	span.SetStatus(codes.Ok, "user found")
 	return &user, nil
+}
+
+func (r *postgresUserRepository) GetEmailByID(ctx context.Context, userID string) (string, error) {
+	ctx, span := r.tracer.Start(ctx, "repositoty.GetEmailByID")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("user.userID", userID))
+
+	var email string
+
+	query := `SELECT email FROM users WHERE id = $1`
+
+	if err := r.db.Pool.QueryRow(ctx, query, userID).Scan(&email); err != nil {
+		span.RecordError(err)
+		return "", fmt.Errorf("error fing user email: %w", err)
+	}
+
+	return email, nil
 }
 
 func (r *postgresUserRepository) StoreRefreshToken(ctx context.Context, userID, hashedToken string) error {

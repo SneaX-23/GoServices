@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,12 +14,14 @@ import (
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/database"
+	"github.com/SneaX-23/GoServices/auth-service/internal/genproto"
 	"github.com/SneaX-23/GoServices/auth-service/internal/handlers"
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
 	"github.com/SneaX-23/GoServices/auth-service/internal/telemetry"
 	"github.com/go-playground/validator/v10"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -90,6 +94,22 @@ func main() {
 
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	server := handlers.NewUserHandler(authService, v, tracer, port)
+
+	// servet for grpc server
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatal("failed to to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	grpcHandlerServer := handlers.NewGRPCServer(authService)
+	genproto.RegisterAuthServiceServer(grpcServer, grpcHandlerServer)
+
+	go func() {
+		slog.Info("gRPC server starting on :50001")
+		if err := grpcServer.Serve(lis); err != nil {
+			slog.Error("gRPC failed to serve", "err", err)
+		}
+	}()
 
 	// Start server in goroutine
 	go func() {
