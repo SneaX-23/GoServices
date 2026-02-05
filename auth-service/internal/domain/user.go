@@ -57,3 +57,9 @@ type Response struct {
 	AccessToken string       `json:"accessToken"`
 	User        UserResponse `json:"user"`
 }
+
+type ErrorResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Error   string `json:"error,omitempty"`
+}

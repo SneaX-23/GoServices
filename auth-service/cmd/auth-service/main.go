@@ -77,6 +77,7 @@ func main() {
 	kafkaBroker := os.Getenv("KAFKA_BROKER")
 	producer := messaging.NewKafkaProducer(kafkaBroker, "auth-events", tracer)
 	defer producer.Close()
+
 	secret := os.Getenv("JWT_ACCESS_SECRET")
 	if secret == "" {
 		slog.Error("JWT_ACCESS_SECRET not set", "secret", secret)

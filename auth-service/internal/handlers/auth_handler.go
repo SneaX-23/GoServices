@@ -45,6 +45,22 @@ func NewUserHandler(service *service.AuthService, validate *validator.Validate, 
 	return server
 }
 
+func (h *AuthHandler) respondWithError(w http.ResponseWriter, code int, message string, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	resp := domain.ErrorResponse{
+		Success: false,
+		Message: message,
+	}
+
+	if err != nil && os.Getenv("APP_ENV") != "production" {
+		resp.Error = err.Error()
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
 func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.tracer.Start(r.Context(), "handler.VerifyEmail")
 	defer span.End()
@@ -56,7 +72,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "invalid request body")
 		slog.Error("JSON decode error", "err", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		h.respondWithError(w, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
 
@@ -67,11 +83,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "validation failed")
 		slog.Warn("Validation failed")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"error": "Invalid input:please provide a valid email",
-		})
+		h.respondWithError(w, http.StatusBadRequest, "Please provide a valid email", err)
 		return
 	}
 
@@ -81,7 +93,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "database error")
 		slog.Error("Database error", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "internal server error", err)
 		return
 	}
 
@@ -89,11 +101,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	if user != nil {
 		span.SetAttributes(attribute.Bool("user.exists", true))
 		span.SetStatus(codes.Ok, "email already registered")
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"success":  false,
-			"messsage": "Email already registered",
-		})
+		h.respondWithError(w, http.StatusBadRequest, "Email already registered", err)
 		return
 	}
 
@@ -102,7 +110,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to generate OTP")
 		slog.Error("Error generating otp", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server error", err)
 		return
 	}
 
@@ -117,7 +125,7 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to cache and emit")
 		slog.Error("Error during caching or emiting", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -157,7 +165,7 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "cache error")
 		slog.Error("Cache error", "err", err)
-		http.Error(w, "Internal cache error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -202,7 +210,7 @@ func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "server error")
 		slog.Error("Server error", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -249,7 +257,7 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "server error")
 		slog.Error("Server error", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 	if userExits != nil {
@@ -268,7 +276,7 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "hashing error")
 		slog.Error("Error while hashing password", "err", err)
-		http.Error(w, "Error while hashing password", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 	user.Password = string(hash)
@@ -278,7 +286,7 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "error creating user")
 		slog.Error("Error while creating user", "err", err)
-		http.Error(w, "Internal error while creating user", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -310,7 +318,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "error finding user")
 		slog.Error("Error getting user", "err", err)
-		http.Error(w, "error getting user", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -344,7 +352,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "error generating tokens")
 		slog.Error("Error generating tokens", "err", err)
-		http.Error(w, "Error while login", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 
@@ -407,7 +415,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		if err := h.service.RevokeAllTokens(ctx, existingToken.UserID); err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, "failed to revoke")
-			http.Error(w, "failed to revoke user tokens", http.StatusInternalServerError)
+			h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 			return
 		}
 
@@ -444,7 +452,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		span.RecordError(err)
 		slog.Error("Error while rotating token", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		h.respondWithError(w, http.StatusInternalServerError, "Internal server err", err)
 		return
 	}
 	isProd := os.Getenv("APP_ENV") == "production"
