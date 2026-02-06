@@ -57,7 +57,7 @@ func PaymentConsumer(emailservice *services.EmailService) {
 			slog.Info("Received message", "type", messageType)
 
 			// get user email from user service
-			email, err := config.GetUserEmail(ctx, envelope.Data.UserId)
+			email, err := emailservice.GetUserEmail(ctx, envelope.Data.UserId)
 			if err != nil {
 				slog.Error("Error getting user email from user service", "err", err)
 				return
@@ -73,7 +73,6 @@ func PaymentConsumer(emailservice *services.EmailService) {
 			// commit message
 			reader.CommitMessages(context.Background(), msg)
 			slog.Info("Email sent to %s", "email", email)
-
 		}(m)
 	}
 }

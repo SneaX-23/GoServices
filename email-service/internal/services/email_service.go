@@ -1,9 +1,11 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
+	pb "github.com/SneaX-23/GoServices/auth-service/pkg/genproto"
 	"github.com/SneaX-23/GoServices/email-service/internal/templates"
 )
 
@@ -12,16 +14,18 @@ type ServiceConfig struct {
 }
 
 type EmailService struct {
-	mailer   Mailer
-	renderer *templates.Renderer
-	config   ServiceConfig
+	mailer     Mailer
+	renderer   *templates.Renderer
+	config     ServiceConfig
+	authClient pb.AuthServiceClient
 }
 
-func NewEmailservice(mailer Mailer, renderer *templates.Renderer, config ServiceConfig) *EmailService {
+func NewEmailservice(mailer Mailer, renderer *templates.Renderer, config ServiceConfig, authClient pb.AuthServiceClient) *EmailService {
 	return &EmailService{
-		mailer:   mailer,
-		renderer: renderer,
-		config:   config,
+		mailer:     mailer,
+		renderer:   renderer,
+		config:     config,
+		authClient: authClient,
 	}
 }
 
@@ -56,4 +60,17 @@ func (s *EmailService) SendEmail(to, emailType string, data any) error {
 
 	// Send via Mailer
 	return s.mailer.Send(to, subject, body)
+}
+
+func (s *EmailService) GetUserEmail(ctx context.Context, userID string) (string, error) {
+	resp, err := s.authClient.GetUserEmail(ctx, &pb.UserEmailRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		slog.Error("gRPC call failed", "err", err)
+		return "", err
+	}
+
+	to := resp.Email
+	return to, nil
 }
