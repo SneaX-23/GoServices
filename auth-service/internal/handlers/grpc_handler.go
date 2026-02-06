@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	pb "github.com/SneaX-23/GoServices/auth-service/internal/genproto"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
+	pb "github.com/SneaX-23/GoServices/auth-service/pkg/genproto"
 )
 
 type Server struct {

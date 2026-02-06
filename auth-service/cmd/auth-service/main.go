@@ -14,12 +14,12 @@ import (
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/config"
 	"github.com/SneaX-23/GoServices/auth-service/internal/database"
-	"github.com/SneaX-23/GoServices/auth-service/internal/genproto"
 	"github.com/SneaX-23/GoServices/auth-service/internal/handlers"
 	"github.com/SneaX-23/GoServices/auth-service/internal/messaging"
 	"github.com/SneaX-23/GoServices/auth-service/internal/repository"
 	"github.com/SneaX-23/GoServices/auth-service/internal/service"
 	"github.com/SneaX-23/GoServices/auth-service/internal/telemetry"
+	"github.com/SneaX-23/GoServices/auth-service/pkg/genproto"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 )
