@@ -6,9 +6,36 @@ import (
 
 	"github.com/SneaX-23/GoServices/auth-service/internal/domain"
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
+
+type KafkaHeaderCarrier []kafka.Header
+
+func (c *KafkaHeaderCarrier) Set(key string, value string) {
+	*c = append(*c, kafka.Header{
+		Key:   key,
+		Value: []byte(value),
+	})
+}
+
+func (c *KafkaHeaderCarrier) Get(key string) string {
+	for _, h := range *c {
+		if h.Key == key {
+			return string(h.Value)
+		}
+	}
+	return ""
+}
+
+func (c *KafkaHeaderCarrier) Keys() []string {
+	keys := make([]string, len(*c))
+	for i, h := range *c {
+		keys[i] = h.Key
+	}
+	return keys
+}
 
 func (p *kafkaProducer) PublishUserEvent(ctx context.Context, email, otp string) error {
 	ctx, span := p.tracer.Start(ctx, "messaging.PublishUserEvent")
@@ -32,8 +59,12 @@ func (p *kafkaProducer) PublishUserEvent(ctx context.Context, email, otp string)
 		return err
 	}
 
+	headers := KafkaHeaderCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, &headers)
+
 	err = p.writer.WriteMessages(ctx, kafka.Message{
-		Value: authPayload,
+		Value:   authPayload,
+		Headers: []kafka.Header(headers),
 	})
 	if err != nil {
 		span.RecordError(err)

@@ -270,7 +270,14 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
+	if len(user.Password) > 15 {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"success": false,
+			"message": "Password too long. Please keep it within 15 characters.",
+		})
+		return
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		span.RecordError(err)
