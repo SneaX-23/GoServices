@@ -1,15 +1,15 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-# RUN apk add --no-cache git
+COPY auth-service /auth-service
 
-COPY go.mod go.sum ./
+COPY email-service/go.mod email-service/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY email-service/ .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /myapp .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o email-service ./cmd/email-service/main.go
 
 FROM alpine:latest AS run
 
@@ -17,10 +17,10 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-COPY --from=build /myapp /myapp
+COPY --from=builder /app/email-service /app/email-service
 
-COPY --from=build /app/internal/templates/emails ./internal/templates/emails
+COPY --from=builder /app/internal/templates/emails ./internal/templates/emails
 
 EXPOSE 8080
 
-CMD ["/myapp"]
+CMD ["/app/email-service"]
